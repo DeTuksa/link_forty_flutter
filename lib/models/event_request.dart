@@ -7,7 +7,7 @@ import 'package:json_annotation/json_annotation.dart';
 part 'event_request.g.dart';
 
 /// Request payload for tracking events
-@JsonSerializable()
+@JsonSerializable(explicitToJson: true)
 class EventRequest {
   /// The install ID from attribution
   final String installId;
@@ -96,7 +96,9 @@ class EventRequest {
       final bValue = b[key];
       if (aValue is Map && bValue is Map) {
         if (!_mapDeepEquals(
-            aValue.cast<String, dynamic>(), bValue.cast<String, dynamic>())) {
+          aValue.cast<String, dynamic>(),
+          bValue.cast<String, dynamic>(),
+        )) {
           return false;
         }
       } else if (aValue is List && bValue is List) {
@@ -116,7 +118,9 @@ class EventRequest {
       final bValue = b[i];
       if (aValue is Map && bValue is Map) {
         if (!_mapDeepEquals(
-            aValue.cast<String, dynamic>(), bValue.cast<String, dynamic>())) {
+          aValue.cast<String, dynamic>(),
+          bValue.cast<String, dynamic>(),
+        )) {
           return false;
         }
       } else if (aValue is List && bValue is List) {

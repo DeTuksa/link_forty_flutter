@@ -29,7 +29,7 @@ Map<String, dynamic> _$DeepLinkDataToJson(DeepLinkData instance) =>
       'iosUrl': instance.iosURL,
       'androidUrl': instance.androidURL,
       'webUrl': instance.webURL,
-      'utmParameters': instance.utmParameters,
+      'utmParameters': instance.utmParameters?.toJson(),
       'customParameters': instance.customParameters,
       'deepLinkPath': instance.deepLinkPath,
       'appScheme': instance.appScheme,

@@ -25,5 +25,5 @@ Map<String, dynamic> _$InstallResponseToJson(InstallResponse instance) =>
       'attributed': instance.attributed,
       'confidenceScore': instance.confidenceScore,
       'matchedFactors': instance.matchedFactors,
-      'deepLinkData': instance.deepLinkData,
+      'deepLinkData': instance.deepLinkData?.toJson(),
     };

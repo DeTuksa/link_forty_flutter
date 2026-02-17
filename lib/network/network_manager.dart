@@ -32,11 +32,9 @@ class NetworkManager implements NetworkManagerProtocol {
   /// Maximum number of retry attempts
   static const int _maxRetries = 3;
 
-  NetworkManager({
-    required LinkFortyConfig config,
-    HttpClient? httpClient,
-  })  : _config = config,
-        _httpClient = httpClient ?? HttpClientImpl();
+  NetworkManager({required LinkFortyConfig config, HttpClient? httpClient})
+    : _config = config,
+      _httpClient = httpClient ?? HttpClientImpl();
 
   /// Performs a network request with automatic retry and decodes the response
   ///
@@ -66,38 +64,28 @@ class NetworkManager implements NetworkManagerProtocol {
           headers: headers,
           fromJson: fromJson,
         );
-      } on LinkFortyError catch (e) {
-        lastError = e;
-
-        // Don't retry on client errors (4xx) or non-retryable errors
-        if (e is InvalidResponseError) {
-          final statusCode = e.statusCode;
-          if (statusCode != null && statusCode >= 400 && statusCode < 500) {
-            rethrow;
-          }
-        } else if (e is InvalidConfigurationError ||
-            e is DecodingError ||
-            e is EncodingError) {
+      } catch (e) {
+        // If it's already a LinkFortyError (from above rethrow), just rethrow it
+        if (e is LinkFortyError) {
           rethrow;
         }
+
+        // Otherwise wrap it
+        lastError = NetworkError(e);
 
         // Exponential backoff: 1s, 2s, 4s
         if (attempt < _maxRetries) {
           final delaySeconds = math.pow(2.0, attempt - 1).toInt();
           LinkFortyLogger.log(
-            'Request failed (attempt $attempt/$_maxRetries), retrying in ${delaySeconds}s...',
+            'Request failed (attempt $attempt/$_maxRetries), retrying in ${delaySeconds}s... Error: $e',
           );
           await Future.delayed(Duration(seconds: delaySeconds));
         }
-      } catch (e) {
-        throw NetworkError(e);
       }
     }
 
     throw lastError ??
-        NetworkError(
-          Exception('Request failed after $_maxRetries attempts'),
-        );
+        NetworkError(Exception('Request failed after $_maxRetries attempts'));
   }
 
   // MARK: - Private Methods
@@ -115,9 +103,7 @@ class NetworkManager implements NetworkManagerProtocol {
     final url = '$baseUrl$endpoint';
 
     // Build headers
-    final requestHeaders = <String, String>{
-      'Content-Type': 'application/json',
-    };
+    final requestHeaders = <String, String>{'Content-Type': 'application/json'};
 
     // Add API key if present
     if (_config.apiKey != null) {

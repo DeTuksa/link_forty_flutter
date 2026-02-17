@@ -1,20 +1,16 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
-import 'package:forty_link/forty_link.dart';
-import 'package:forty_link/models/link_forty_config.dart';
-import 'package:forty_link/models/install_response.dart';
-import 'package:forty_link/models/deep_link_data.dart';
-import 'package:forty_link/models/create_link_options.dart';
-import 'package:forty_link/models/create_link_result.dart';
+import 'package:forty_link/attribution/attribution_manager.dart';
 import 'package:forty_link/network/network_manager.dart';
 import 'package:forty_link/storage/storage_manager.dart';
 import 'package:forty_link/fingerprint/fingerprint_collector.dart';
+import 'package:forty_link/models/install_response.dart';
+import 'package:forty_link/models/deep_link_data.dart';
 import 'package:forty_link/fingerprint/device_fingerprint.dart';
 import 'package:forty_link/network/http_method.dart';
-import 'package:forty_link/errors/link_forty_error.dart';
 
-import 'forty_link_test.mocks.dart';
+import 'attribution_manager_test.mocks.dart';
 
 @GenerateMocks([
   NetworkManagerProtocol,
@@ -25,33 +21,21 @@ void main() {
   late MockNetworkManagerProtocol mockNetworkManager;
   late MockStorageManagerProtocol mockStorageManager;
   late MockFingerprintCollectorProtocol mockFingerprintCollector;
-  late LinkFortyConfig config;
+  late AttributionManager attributionManager;
 
   setUp(() {
     mockNetworkManager = MockNetworkManagerProtocol();
     mockStorageManager = MockStorageManagerProtocol();
     mockFingerprintCollector = MockFingerprintCollectorProtocol();
-    config = LinkFortyConfig(
-      baseURL: Uri.parse('https://example.com'),
-      apiKey: 'test_key',
+    attributionManager = AttributionManager(
+      networkManager: mockNetworkManager,
+      storageManager: mockStorageManager,
+      fingerprintCollector: mockFingerprintCollector,
     );
-
-    // Reset singleton if possible, or just expect separate instances if using dependency injection
-    // Since LinkForty is a singleton, we need to reset it.
-    // However, LinkForty doesn't expose a reset method for the singleton instance itself purely.
-    // But it has a `reset()` method which clears internal state but not the `_instance` reference?
-    // Let's check `reset()` implementation:
-    // `_instance = null;`
-    // Yes! `reset()` clears the singleton instance.
-    LinkForty.instanceOrNull?.reset();
   });
 
-  tearDown(() {
-    LinkForty.instanceOrNull?.reset();
-  });
-
-  group('LinkForty', () {
-    test('initialize sets up SDK and reports install', () async {
+  group('AttributionManager', () {
+    test('reportInstall collects fingerprint and sends request', () async {
       final fingerprint = DeviceFingerprint(
         userAgent: 'ua',
         timezone: 'tz',
@@ -63,6 +47,7 @@ void main() {
         appVersion: '1.0',
         attributionWindowHours: 168,
       );
+
       final installResponse = InstallResponse(
         installId: 'inst_1',
         attributed: true,
@@ -93,15 +78,16 @@ void main() {
       ).thenAnswer((_) async => true);
       when(mockStorageManager.setHasLaunched()).thenAnswer((_) async => true);
 
-      final response = await LinkForty.initialize(
-        config: config,
-        networkManager: mockNetworkManager,
-        storageManager: mockStorageManager,
-        fingerprintCollector: mockFingerprintCollector,
+      final result = await attributionManager.reportInstall(
+        attributionWindowHours: 168,
       );
 
-      expect(LinkForty.instance, isNotNull);
-      expect(response.installId, 'inst_1');
+      verify(
+        mockFingerprintCollector.collectFingerprint(
+          attributionWindowHours: 168,
+          deviceId: null,
+        ),
+      ).called(1);
 
       verify(
         mockNetworkManager.request<InstallResponse>(
@@ -111,21 +97,21 @@ void main() {
           fromJson: anyNamed('fromJson'),
         ),
       ).called(1);
+
+      verify(mockStorageManager.saveInstallId('inst_1')).called(1);
+      verify(
+        mockStorageManager.saveInstallData(
+          argThat(
+            isA<DeepLinkData>().having((d) => d.shortCode, 'shortCode', 'abc'),
+          ),
+        ),
+      ).called(1);
+      verify(mockStorageManager.setHasLaunched()).called(1);
+
+      expect(result, equals(installResponse));
     });
 
-    test('trackEvent checks initialization', () async {
-      // Not initialized
-      await expectLater(
-        () => LinkForty.instance,
-        throwsA(isA<NotInitializedError>()),
-      );
-    });
-
-    // We can add more integration tests here, but since we tested Managers individually,
-    // verifying `initialize` wiring is the most important part.
-
-    test('createLink works', () async {
-      // Initialize first
+    test('reportInstall handles organic install (no deep link data)', () async {
       final fingerprint = DeviceFingerprint(
         userAgent: 'ua',
         timezone: 'tz',
@@ -137,11 +123,13 @@ void main() {
         appVersion: '1.0',
         attributionWindowHours: 168,
       );
+
       final installResponse = InstallResponse(
-        installId: 'inst_1',
+        installId: 'inst_2',
         attributed: false,
         confidenceScore: 0,
         matchedFactors: [],
+        deepLinkData: null,
       );
 
       when(
@@ -150,6 +138,7 @@ void main() {
           deviceId: anyNamed('deviceId'),
         ),
       ).thenAnswer((_) async => fingerprint);
+
       when(
         mockNetworkManager.request<InstallResponse>(
           endpoint: anyNamed('endpoint'),
@@ -158,44 +147,36 @@ void main() {
           fromJson: anyNamed('fromJson'),
         ),
       ).thenAnswer((_) async => installResponse);
+
       when(mockStorageManager.saveInstallId(any)).thenAnswer((_) async => true);
       when(mockStorageManager.setHasLaunched()).thenAnswer((_) async => true);
 
-      await LinkForty.initialize(
-        config: config,
-        networkManager: mockNetworkManager,
-        storageManager: mockStorageManager,
-        fingerprintCollector: mockFingerprintCollector,
-      );
+      await attributionManager.reportInstall(attributionWindowHours: 168);
 
-      // Create Link
-      final options = CreateLinkOptions();
-      final result = CreateLinkResult(
-        url: 'https://ex.com/abc',
-        shortCode: 'abc',
-        linkId: '123',
-      );
+      verify(mockStorageManager.saveInstallId('inst_2')).called(1);
+      verifyNever(mockStorageManager.saveInstallData(any));
+    });
 
-      when(
-        mockNetworkManager.request<CreateLinkResult>(
-          endpoint: anyNamed('endpoint'),
-          method: anyNamed('method'),
-          body: anyNamed('body'),
-          fromJson: anyNamed('fromJson'),
-        ),
-      ).thenAnswer((_) async => result);
+    test('getInstallId returns stored ID', () {
+      when(mockStorageManager.getInstallId()).thenReturn('id');
+      expect(attributionManager.getInstallId(), 'id');
+    });
 
-      final linkResult = await LinkForty.instance.createLink(options);
+    test('getInstallData returns stored data', () {
+      final data = DeepLinkData(shortCode: 'abc');
+      when(mockStorageManager.getInstallData()).thenReturn(data);
+      expect(attributionManager.getInstallData(), data);
+    });
 
-      expect(linkResult.shortCode, 'abc');
-      verify(
-        mockNetworkManager.request(
-          endpoint: '/api/sdk/v1/links',
-          method: HttpMethod.post,
-          body: options.toJson(),
-          fromJson: anyNamed('fromJson'),
-        ),
-      ).called(1);
+    test('isFirstLaunch returns stored value', () {
+      when(mockStorageManager.isFirstLaunch()).thenReturn(true);
+      expect(attributionManager.isFirstLaunch(), isTrue);
+    });
+
+    test('clearData clears storage', () async {
+      when(mockStorageManager.clearAll()).thenAnswer((_) async => true);
+      await attributionManager.clearData();
+      verify(mockStorageManager.clearAll()).called(1);
     });
   });
 }

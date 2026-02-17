@@ -30,5 +30,5 @@ Map<String, dynamic> _$CreateLinkOptionsToJson(CreateLinkOptions instance) =>
       'title': instance.title,
       'description': instance.description,
       'customCode': instance.customCode,
-      'utmParameters': instance.utmParameters,
+      'utmParameters': instance.utmParameters?.toJson(),
     };

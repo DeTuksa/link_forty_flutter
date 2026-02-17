@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'link_forty_logger.dart';
 import 'models/link_forty_config.dart';
 import 'models/install_response.dart';
@@ -49,11 +50,11 @@ class LinkForty {
   // MARK: - Properties
 
   LinkFortyConfig? _config;
-  NetworkManager? _networkManager;
+  NetworkManagerProtocol? _networkManager;
   AttributionManager? _attributionManager;
   EventTracker? _eventTracker;
   DeepLinkHandler? _deepLinkHandler;
-  
+
   final Completer<void> _initializationCompleter = Completer<void>();
   bool _isInitialized = false;
 
@@ -67,12 +68,18 @@ class LinkForty {
   /// - [config]: SDK configuration
   /// - [attributionWindowHours]: Attribution window in hours (default: 168 = 7 days)
   /// - [deviceId]: Optional device identifier for attribution
+  /// - [networkManager]: Optional NetworkManager for testing
+  /// - [storageManager]: Optional StorageManager for testing
+  /// - [fingerprintCollector]: Optional FingerprintCollector for testing
   /// - Returns: [InstallResponse] with attribution data
   /// - Throws: [LinkFortyError] if initialization fails
   static Future<InstallResponse> initialize({
     required LinkFortyConfig config,
     int attributionWindowHours = 168,
     String? deviceId,
+    @visibleForTesting NetworkManagerProtocol? networkManager,
+    @visibleForTesting StorageManagerProtocol? storageManager,
+    @visibleForTesting FingerprintCollectorProtocol? fingerprintCollector,
   }) async {
     // Check if already initialized
     if (_instance != null) {
@@ -92,27 +99,31 @@ class LinkForty {
     LinkFortyLogger.isDebugEnabled = config.debug;
 
     // Create managers
-    final storageManager = await StorageManager.create();
-    final networkManager = NetworkManager(config: config);
-    final fingerprintCollector = FingerprintCollector();
+    // Use injected dependencies if provided, otherwise create defaults
+    final effectiveStorageManager =
+        storageManager ?? await StorageManager.create();
+    final effectiveNetworkManager =
+        networkManager ?? NetworkManager(config: config);
+    final effectiveFingerprintCollector =
+        fingerprintCollector ?? FingerprintCollector();
 
-    sdk._networkManager = networkManager;
+    sdk._networkManager = effectiveNetworkManager;
 
     sdk._attributionManager = AttributionManager(
-      networkManager: networkManager,
-      storageManager: storageManager,
-      fingerprintCollector: fingerprintCollector,
+      networkManager: effectiveNetworkManager,
+      storageManager: effectiveStorageManager,
+      fingerprintCollector: effectiveFingerprintCollector,
     );
 
     sdk._eventTracker = EventTracker(
-      networkManager: networkManager,
-      storageManager: storageManager,
+      networkManager: effectiveNetworkManager,
+      storageManager: effectiveStorageManager,
     );
 
     final deepLinkHandler = DeepLinkHandler();
     deepLinkHandler.configure(
-      networkManager: networkManager,
-      fingerprintCollector: fingerprintCollector,
+      networkManager: effectiveNetworkManager,
+      fingerprintCollector: effectiveFingerprintCollector,
       baseURL: config.baseURL,
     );
     sdk._deepLinkHandler = deepLinkHandler;
@@ -130,7 +141,9 @@ class LinkForty {
 
     // If attributed, notify deferred deep link handler
     if (response.attributed && response.deepLinkData != null) {
-      await sdk._deepLinkHandler?.deliverDeferredDeepLink(response.deepLinkData);
+      await sdk._deepLinkHandler?.deliverDeferredDeepLink(
+        response.deepLinkData,
+      );
     }
 
     LinkFortyLogger.log(
@@ -182,7 +195,10 @@ class LinkForty {
   /// - [name]: Event name (e.g., "purchase", "signup")
   /// - [properties]: Optional event properties (must be JSON-serializable)
   /// - Throws: [LinkFortyError] if tracking fails
-  Future<void> trackEvent(String name, [Map<String, dynamic>? properties]) async {
+  Future<void> trackEvent(
+    String name, [
+    Map<String, dynamic>? properties,
+  ]) async {
     if (!_isInitialized) {
       throw const NotInitializedError();
     }
@@ -268,12 +284,13 @@ class LinkForty {
 
     if (options.templateId != null) {
       // Use dashboard endpoint with explicit templateId
-      final response = await networkManager.request<DashboardCreateLinkResponse>(
-        endpoint: '/api/links',
-        method: HttpMethod.post,
-        body: options.toJson(),
-        fromJson: (json) => DashboardCreateLinkResponse.fromJson(json),
-      );
+      final response = await networkManager
+          .request<DashboardCreateLinkResponse>(
+            endpoint: '/api/links',
+            method: HttpMethod.post,
+            body: options.toJson(),
+            fromJson: (json) => DashboardCreateLinkResponse.fromJson(json),
+          );
 
       // Construct URL from parts
       final baseUrl = config.baseURL.toString().replaceAll(RegExp(r'/$'), '');

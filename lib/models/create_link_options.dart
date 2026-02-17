@@ -8,7 +8,7 @@ import 'utm_parameters.dart';
 part 'create_link_options.g.dart';
 
 /// Options for creating a short link
-@JsonSerializable()
+@JsonSerializable(explicitToJson: true)
 class CreateLinkOptions {
   /// Template ID (auto-selected if omitted)
   final String? templateId;

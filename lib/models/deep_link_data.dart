@@ -8,7 +8,7 @@ import 'utm_parameters.dart';
 part 'deep_link_data.g.dart';
 
 /// Deep link data returned from attribution or direct deep links
-@JsonSerializable()
+@JsonSerializable(explicitToJson: true)
 class DeepLinkData {
   /// The short code of the link (e.g., "abc123")
   final String shortCode;
@@ -139,6 +139,9 @@ class DeepLinkData {
   /// Helper for map hash code
   static int _mapHashCode(Map<String, String>? map) {
     if (map == null) return 0;
-    return map.entries.fold(0, (hash, entry) => hash ^ entry.key.hashCode ^ entry.value.hashCode);
+    return map.entries.fold(
+      0,
+      (hash, entry) => hash ^ entry.key.hashCode ^ entry.value.hashCode,
+    );
   }
 }
