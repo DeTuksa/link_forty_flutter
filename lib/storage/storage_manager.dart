@@ -1,5 +1,10 @@
+// Copyright 2026 The Forty Link Authors. All rights reserved.
+// Use of this source code is governed by a MIT-style license that can be
+// found in the LICENSE file.
+
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../link_forty_logger.dart';
 import '../models/deep_link_data.dart';
 import 'storage_keys.dart';
 
@@ -168,16 +173,4 @@ abstract class StorageManagerProtocol {
   bool isFirstLaunch();
   Future<bool> setHasLaunched();
   Future<bool> clearAll();
-}
-
-/// Simple logger for debug mode
-class LinkFortyLogger {
-  static bool isDebugEnabled = false;
-
-  static void log(String message) {
-    if (isDebugEnabled) {
-      // ignore: avoid_print
-      print('[LinkForty] $message');
-    }
-  }
 }
