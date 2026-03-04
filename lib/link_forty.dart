@@ -1,4 +1,4 @@
-// Copyright 2026 The Forty Link Authors. All rights reserved.
+// Copyright 2026 The Link Forty Authors. All rights reserved.
 // Use of this source code is governed by a MIT-style license that can be
 // found in the LICENSE file.
 
@@ -277,43 +277,36 @@ class LinkForty {
       throw const MissingApiKeyError();
     }
 
+    if (options.templateId == null) {
+      throw const MissingTemplateIdError();
+    }
+
     final networkManager = _networkManager;
     if (networkManager == null) {
       throw const NotInitializedError();
     }
 
-    if (options.templateId != null) {
-      // Use dashboard endpoint with explicit templateId
-      final response = await networkManager
-          .request<DashboardCreateLinkResponse>(
-            endpoint: '/api/links',
-            method: HttpMethod.post,
-            body: options.toJson(),
-            fromJson: (json) => DashboardCreateLinkResponse.fromJson(json),
-          );
+    // Use dashboard endpoint with templateId
+    final response = await networkManager.request<DashboardCreateLinkResponse>(
+      endpoint: '/api/links',
+      method: HttpMethod.post,
+      body: options.toJson(),
+      fromJson: (json) => DashboardCreateLinkResponse.fromJson(json),
+    );
 
-      // Construct URL from parts
-      final baseUrl = config.baseURL.toString().replaceAll(RegExp(r'/$'), '');
-      final templateSlug = options.templateSlug ?? '';
-      final pathSegment = templateSlug.isEmpty
-          ? response.shortCode
-          : '$templateSlug/${response.shortCode}';
-      final url = '$baseUrl/$pathSegment';
+    // Construct URL from parts
+    final baseUrl = config.baseURL.toString().replaceAll(RegExp(r'/$'), '');
+    final templateSlug = options.templateSlug ?? '';
+    final pathSegment = templateSlug.isEmpty
+        ? response.shortCode
+        : '$templateSlug/${response.shortCode}';
+    final url = '$baseUrl/$pathSegment';
 
-      return CreateLinkResult(
-        url: url,
-        shortCode: response.shortCode,
-        linkId: response.id,
-      );
-    } else {
-      // Use simplified SDK endpoint (auto-selects template)
-      return await networkManager.request<CreateLinkResult>(
-        endpoint: '/api/sdk/v1/links',
-        method: HttpMethod.post,
-        body: options.toJson(),
-        fromJson: (json) => CreateLinkResult.fromJson(json),
-      );
-    }
+    return CreateLinkResult(
+      url: url,
+      shortCode: response.shortCode,
+      linkId: response.id,
+    );
   }
 
   // MARK: - Attribution Data

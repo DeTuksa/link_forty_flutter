@@ -1,11 +1,11 @@
-// Copyright 2026 The Forty Link Authors. All rights reserved.
+// Copyright 2026 The Link Forty Authors. All rights reserved.
 // Use of this source code is governed by a MIT-style license that can be
 // found in the LICENSE file.
 
 import 'package:logger/logger.dart';
 
 /// Internal logger for the LinkForty SDK
-/// 
+///
 /// Only logs when debug mode is enabled
 class LinkFortyLogger {
   // Private constructor to prevent instantiation
@@ -32,7 +32,7 @@ class LinkFortyLogger {
   );
 
   /// Logs a debug message if debug mode is enabled
-  /// 
+  ///
   /// - [message]: The message to log
   static void log(String message) {
     if (isDebugEnabled) {
@@ -41,7 +41,7 @@ class LinkFortyLogger {
   }
 
   /// Logs an info message if debug mode is enabled
-  /// 
+  ///
   /// - [message]: The message to log
   static void info(String message) {
     if (isDebugEnabled) {
@@ -50,7 +50,7 @@ class LinkFortyLogger {
   }
 
   /// Logs a warning message if debug mode is enabled
-  /// 
+  ///
   /// - [message]: The warning message to log
   static void warning(String message) {
     if (isDebugEnabled) {
@@ -59,11 +59,15 @@ class LinkFortyLogger {
   }
 
   /// Logs an error message if debug mode is enabled
-  /// 
+  ///
   /// - [message]: The error message to log
   /// - [error]: Optional error object
   /// - [stackTrace]: Optional stack trace
-  static void logError(String message, [Object? error, StackTrace? stackTrace]) {
+  static void logError(
+    String message, [
+    Object? error,
+    StackTrace? stackTrace,
+  ]) {
     if (isDebugEnabled) {
       _logger.e('[$_tag] $message', error: error, stackTrace: stackTrace);
     }

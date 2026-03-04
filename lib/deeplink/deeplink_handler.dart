@@ -1,4 +1,4 @@
-// Copyright 2026 The Forty Link Authors. All rights reserved.
+// Copyright 2026 The Link Forty Authors. All rights reserved.
 // Use of this source code is governed by a MIT-style license that can be
 // found in the LICENSE file.
 
@@ -88,7 +88,9 @@ class DeepLinkHandler {
     );
 
     // Create a snapshot of callbacks to avoid modification during iteration
-    final callbacks = List<DeferredDeepLinkCallback>.from(_deferredDeepLinkCallbacks);
+    final callbacks = List<DeferredDeepLinkCallback>.from(
+      _deferredDeepLinkCallbacks,
+    );
 
     // Invoke all callbacks
     for (final callback in callbacks) {
@@ -115,7 +117,8 @@ class DeepLinkHandler {
     final localData = URLParser.parseDeepLink(uri);
 
     // Attempt server-side resolution if configured
-    final resolvedData = (_networkManager != null && _fingerprintCollector != null)
+    final resolvedData =
+        (_networkManager != null && _fingerprintCollector != null)
         ? await _resolveUrl(uri, fallback: localData)
         : localData;
 
@@ -188,7 +191,10 @@ class DeepLinkHandler {
 
     // Build query string
     final queryString = queryParams.entries
-        .map((e) => '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}')
+        .map(
+          (e) =>
+              '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}',
+        )
         .join('&');
 
     final endpoint = '$resolvePath?$queryString';

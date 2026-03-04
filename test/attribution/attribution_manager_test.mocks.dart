@@ -6,8 +6,9 @@
 import 'dart:async' as _i2;
 
 import 'package:forty_link/fingerprint/device_fingerprint.dart' as _i3;
-import 'package:forty_link/fingerprint/fingerprint_collector.dart' as _i9;
+import 'package:forty_link/fingerprint/fingerprint_collector.dart' as _i10;
 import 'package:forty_link/models/deep_link_data.dart' as _i8;
+import 'package:forty_link/models/event_request.dart' as _i9;
 import 'package:forty_link/network/http_method.dart' as _i5;
 import 'package:forty_link/network/network_manager.dart' as _i4;
 import 'package:forty_link/storage/storage_manager.dart' as _i7;
@@ -135,6 +136,22 @@ class MockStorageManagerProtocol extends _i1.Mock
           as _i2.Future<bool>);
 
   @override
+  _i2.Future<bool> saveEventQueue(List<_i9.EventRequest>? events) =>
+      (super.noSuchMethod(
+            Invocation.method(#saveEventQueue, [events]),
+            returnValue: _i2.Future<bool>.value(false),
+          )
+          as _i2.Future<bool>);
+
+  @override
+  List<_i9.EventRequest> loadEventQueue() =>
+      (super.noSuchMethod(
+            Invocation.method(#loadEventQueue, []),
+            returnValue: <_i9.EventRequest>[],
+          )
+          as List<_i9.EventRequest>);
+
+  @override
   _i2.Future<bool> clearAll() =>
       (super.noSuchMethod(
             Invocation.method(#clearAll, []),
@@ -147,7 +164,7 @@ class MockStorageManagerProtocol extends _i1.Mock
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockFingerprintCollectorProtocol extends _i1.Mock
-    implements _i9.FingerprintCollectorProtocol {
+    implements _i10.FingerprintCollectorProtocol {
   MockFingerprintCollectorProtocol() {
     _i1.throwOnMissingStub(this);
   }

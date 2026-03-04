@@ -1,4 +1,4 @@
-// Copyright 2026 The Forty Link Authors. All rights reserved.
+// Copyright 2026 The Link Forty Authors. All rights reserved.
 // Use of this source code is governed by a MIT-style license that can be
 // found in the LICENSE file.
 
@@ -27,11 +27,9 @@ class FingerprintCollector implements FingerprintCollectorProtocol {
   ///
   /// - [deviceInfo]: Device info plugin instance
   /// - [packageInfo]: Package info (if already loaded)
-  FingerprintCollector({
-    DeviceInfoPlugin? deviceInfo,
-    PackageInfo? packageInfo,
-  })  : _deviceInfo = deviceInfo ?? DeviceInfoPlugin(),
-        _packageInfo = packageInfo;
+  FingerprintCollector({DeviceInfoPlugin? deviceInfo, PackageInfo? packageInfo})
+    : _deviceInfo = deviceInfo ?? DeviceInfoPlugin(),
+      _packageInfo = packageInfo;
 
   /// Collects device fingerprint for attribution
   ///
@@ -80,16 +78,16 @@ class FingerprintCollector implements FingerprintCollectorProtocol {
     try {
       // Ensure bindings are initialized
       WidgetsFlutterBinding.ensureInitialized();
-      
+
       // Get the first view from the platform dispatcher
       final views = WidgetsBinding.instance.platformDispatcher.views;
       if (views.isEmpty) {
         return (0, 0);
       }
-      
+
       final view = views.first;
       final physicalSize = view.physicalSize;
-      
+
       return (physicalSize.width.toInt(), physicalSize.height.toInt());
     } catch (e) {
       // Fallback for testing or headless environments

@@ -1,4 +1,4 @@
-// Copyright 2026 The Forty Link Authors. All rights reserved.
+// Copyright 2026 The Link Forty Authors. All rights reserved.
 // Use of this source code is governed by a MIT-style license that can be
 // found in the LICENSE file.
 
@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../link_forty_logger.dart';
 import '../models/deep_link_data.dart';
+import '../models/event_request.dart';
 import 'storage_keys.dart';
 
 /// Protocol for SharedPreferences to enable mocking in tests
@@ -139,11 +140,47 @@ class StorageManager implements StorageManagerProtocol {
     }
   }
 
+  // MARK: - Event Queue
+
+  /// Saves the event queue to persistent storage
+  ///
+  /// - [events]: List of events to persist
+  /// - Returns: True if successful
+  @override
+  Future<bool> saveEventQueue(List<EventRequest> events) async {
+    try {
+      final jsonList = events.map((e) => e.toJson()).toList();
+      final jsonString = jsonEncode(jsonList);
+      return await _prefs.setString(StorageKeys.eventQueue, jsonString);
+    } catch (e) {
+      LinkFortyLogger.log('Failed to save event queue: $e');
+      return false;
+    }
+  }
+
+  /// Loads the event queue from persistent storage
+  ///
+  /// - Returns: List of persisted events, empty if none
+  @override
+  List<EventRequest> loadEventQueue() {
+    try {
+      final jsonString = _prefs.getString(StorageKeys.eventQueue);
+      if (jsonString == null) return [];
+      final jsonList = jsonDecode(jsonString) as List<dynamic>;
+      return jsonList
+          .map((e) => EventRequest.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      LinkFortyLogger.log('Failed to load event queue: $e');
+      return [];
+    }
+  }
+
   // MARK: - Clear Data
 
   /// Clears all stored SDK data
   ///
-  /// This removes install ID, install data, and first launch flag
+  /// This removes install ID, install data, first launch flag, and event queue
   ///
   /// - Returns: True if all removals were successful, false otherwise
   @override
@@ -153,6 +190,7 @@ class StorageManager implements StorageManagerProtocol {
         _prefs.remove(StorageKeys.installId),
         _prefs.remove(StorageKeys.installData),
         _prefs.remove(StorageKeys.firstLaunch),
+        _prefs.remove(StorageKeys.eventQueue),
       ]);
 
       // Return true only if all removals were successful
@@ -172,5 +210,7 @@ abstract class StorageManagerProtocol {
   DeepLinkData? getInstallData();
   bool isFirstLaunch();
   Future<bool> setHasLaunched();
+  Future<bool> saveEventQueue(List<EventRequest> events);
+  List<EventRequest> loadEventQueue();
   Future<bool> clearAll();
 }

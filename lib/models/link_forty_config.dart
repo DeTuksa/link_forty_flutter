@@ -1,26 +1,26 @@
-// Copyright 2026 The Forty Link Authors. All rights reserved.
+// Copyright 2026 The Link Forty Authors. All rights reserved.
 // Use of this source code is governed by a MIT-style license that can be
 // found in the LICENSE file.
 
 /// Configuration for the LinkForty SDK
 class LinkFortyConfig {
   /// The base URL of your LinkForty instance
-  /// 
+  ///
   /// Must be HTTPS in production (HTTP allowed for localhost testing only)
   final Uri baseURL;
 
   /// API key for LinkForty Cloud (optional for self-hosted Core)
-  /// 
+  ///
   /// Sent as Bearer token in Authorization header
   final String? apiKey;
 
   /// Enable debug logging
-  /// 
+  ///
   /// Logs network requests, responses, and SDK operations
   final bool debug;
 
   /// Attribution window in hours (1-2160, default: 168 = 7 days)
-  /// 
+  ///
   /// How long after a click an install can be attributed
   final int attributionWindowHours;
 
@@ -40,7 +40,7 @@ class LinkFortyConfig {
   });
 
   /// Validates the configuration
-  /// 
+  ///
   /// Throws [LinkFortyException] if validation fails
   void validate() {
     // Validate HTTPS (except localhost)

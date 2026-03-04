@@ -1,4 +1,4 @@
-// Copyright 2026 The Forty Link Authors. All rights reserved.
+// Copyright 2026 The Link Forty Authors. All rights reserved.
 // Use of this source code is governed by a MIT-style license that can be
 // found in the LICENSE file.
 
@@ -23,7 +23,7 @@ class EventTracker implements EventTrackerProtocol {
   /// Creates an event tracker
   ///
   /// - [networkManager]: Network manager for API requests
-  /// - [storageManager]: Storage manager for install ID
+  /// - [storageManager]: Storage manager for install ID and event queue persistence
   /// - [eventQueue]: Event queue for offline support
   EventTracker({
     required NetworkManagerProtocol networkManager,
@@ -31,7 +31,10 @@ class EventTracker implements EventTrackerProtocol {
     EventQueue? eventQueue,
   }) : _networkManager = networkManager,
        _storageManager = storageManager,
-       _eventQueue = eventQueue ?? EventQueue();
+       _eventQueue = eventQueue ?? EventQueue() {
+    // Restore any events that were persisted before the last app session
+    _restorePersistedQueue();
+  }
 
   // MARK: - Event Tracking
 
@@ -71,8 +74,9 @@ class EventTracker implements EventTrackerProtocol {
       // If send succeeds, try to flush queue
       await flushQueue();
     } catch (e) {
-      // If send fails, queue the event
+      // If send fails, queue the event and persist
       _eventQueue.enqueue(event);
+      await _persistQueue();
       LinkFortyLogger.log('Event queued due to error: $e');
       rethrow;
     }
@@ -114,10 +118,12 @@ class EventTracker implements EventTrackerProtocol {
 
       try {
         await _sendEvent(event);
+        await _persistQueue();
         LinkFortyLogger.log('Queued event sent: ${event.eventName}');
       } catch (e) {
         // Re-queue if send fails
         _eventQueue.enqueue(event);
+        await _persistQueue();
         LinkFortyLogger.log('Failed to send queued event: $e');
         return;
       }
@@ -147,6 +153,24 @@ class EventTracker implements EventTrackerProtocol {
       body: event,
       fromJson: (json) => EventResponse.fromJson(json),
     );
+  }
+
+  /// Persists the current event queue state to storage
+  Future<void> _persistQueue() async {
+    await _storageManager.saveEventQueue(_eventQueue.peek());
+  }
+
+  /// Restores persisted events from storage into the in-memory queue
+  void _restorePersistedQueue() {
+    final persisted = _storageManager.loadEventQueue();
+    for (final event in persisted) {
+      _eventQueue.enqueue(event);
+    }
+    if (persisted.isNotEmpty) {
+      LinkFortyLogger.log(
+        'Restored ${persisted.length} event(s) from persistent storage',
+      );
+    }
   }
 }
 

@@ -225,5 +225,61 @@ void main() {
       // Should requeue
       verify(mockQueue.enqueue(event1)).called(1);
     });
+
+    test(
+      'trackEvent persists queue to storage after network failure',
+      () async {
+        when(mockStorageManager.getInstallId()).thenReturn('inst_1');
+        when(
+          mockNetworkManager.request<EventResponse>(
+            endpoint: anyNamed('endpoint'),
+            method: anyNamed('method'),
+            body: anyNamed('body'),
+            fromJson: anyNamed('fromJson'),
+          ),
+        ).thenThrow(NetworkError(Exception('fail')));
+
+        when(mockQueue.peek()).thenReturn([]);
+        when(
+          mockStorageManager.saveEventQueue(any),
+        ).thenAnswer((_) async => true);
+
+        await expectLater(
+          () => eventTracker.trackEvent('purchase'),
+          throwsA(isA<NetworkError>()),
+        );
+
+        // Queue must be persisted after the failure
+        verify(mockStorageManager.saveEventQueue(any)).called(1);
+      },
+    );
+
+    test(
+      'EventTracker loads persisted queue from storage on creation',
+      () async {
+        final persistedEvent = EventRequest(
+          installId: 'inst_1',
+          eventName: 'persisted',
+          eventData: {},
+        );
+
+        // Return persisted events from storage
+        when(mockStorageManager.loadEventQueue()).thenReturn([persistedEvent]);
+
+        // The real EventQueue is used here (not the mock)
+        final realQueue = EventQueue();
+        final tracker = EventTracker(
+          networkManager: mockNetworkManager,
+          storageManager: mockStorageManager,
+          eventQueue: realQueue,
+        );
+
+        // Wait for constructor side-effects
+        await Future.delayed(Duration.zero);
+
+        expect(tracker.queuedEventCount, 1);
+        verify(mockStorageManager.loadEventQueue()).called(1);
+      },
+    );
   });
 }
