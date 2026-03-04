@@ -1,4 +1,4 @@
-// Copyright 2026 The Forty Link Authors. All rights reserved.
+// Copyright 2026 The Link Forty Authors. All rights reserved.
 // Use of this source code is governed by a MIT-style license that can be
 // found in the LICENSE file.
 
@@ -43,9 +43,8 @@ class HttpClientImpl implements HttpClient {
     try {
       switch (method) {
         case HttpMethod.get:
-          response = await _client
-              .get(uri, headers: requestHeaders)
-              .timeout(timeout);
+          response =
+              await _client.get(uri, headers: requestHeaders).timeout(timeout);
           break;
         case HttpMethod.post:
           response = await _client

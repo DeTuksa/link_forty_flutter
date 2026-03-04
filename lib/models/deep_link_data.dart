@@ -1,4 +1,4 @@
-// Copyright 2026 The Forty Link Authors. All rights reserved.
+// Copyright 2026 The Link Forty Authors. All rights reserved.
 // Use of this source code is governed by a MIT-style license that can be
 // found in the LICENSE file.
 
@@ -7,7 +7,10 @@ import 'utm_parameters.dart';
 
 part 'deep_link_data.g.dart';
 
-/// Deep link data returned from attribution or direct deep links
+/// Encapsulates all data associated with a LinkForty deep link.
+///
+/// This model is used for both deferred deep links (attribution) and
+/// direct deep links (app opening).
 @JsonSerializable(explicitToJson: true)
 class DeepLinkData {
   /// The short code of the link (e.g., "abc123")

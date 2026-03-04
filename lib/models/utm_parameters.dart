@@ -1,4 +1,4 @@
-// Copyright 2026 The Forty Link Authors. All rights reserved.
+// Copyright 2026 The Link Forty Authors. All rights reserved.
 // Use of this source code is governed by a MIT-style license that can be
 // found in the LICENSE file.
 
@@ -6,7 +6,7 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'utm_parameters.g.dart';
 
-/// UTM parameters for campaign tracking
+/// Standard UTM parameters used for campaign tracking and analytics.
 @JsonSerializable()
 class UTMParameters {
   /// Campaign source (e.g., "google", "facebook", "email")

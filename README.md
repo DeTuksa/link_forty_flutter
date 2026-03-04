@@ -47,7 +47,7 @@ flutter pub add forty_link
 Initialize the SDK in your `main.dart` or early in your app lifecycle.
 
 ```dart
-import 'package:forty_link/forty_link.dart';
+import 'package:forty_link/link_forty.dart';
 import 'package:forty_link/models/link_forty_config.dart';
 
 void main() async {

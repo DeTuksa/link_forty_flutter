@@ -9,6 +9,7 @@ import 'package:forty_link/models/install_response.dart';
 import 'package:forty_link/models/deep_link_data.dart';
 import 'package:forty_link/fingerprint/device_fingerprint.dart';
 import 'package:forty_link/network/http_method.dart';
+import 'package:forty_link/errors/link_forty_error.dart';
 
 import 'attribution_manager_test.mocks.dart';
 
@@ -27,6 +28,14 @@ void main() {
     mockNetworkManager = MockNetworkManagerProtocol();
     mockStorageManager = MockStorageManagerProtocol();
     mockFingerprintCollector = MockFingerprintCollectorProtocol();
+
+    // Setup default storage behavior (first launch)
+    when(mockStorageManager.getInstallId()).thenReturn(null);
+    when(mockStorageManager.getInstallData()).thenReturn(null);
+    when(mockStorageManager.saveInstallId(any)).thenAnswer((_) async => true);
+    when(mockStorageManager.saveInstallData(any)).thenAnswer((_) async => true);
+    when(mockStorageManager.setHasLaunched()).thenAnswer((_) async => true);
+
     attributionManager = AttributionManager(
       networkManager: mockNetworkManager,
       storageManager: mockStorageManager,
@@ -178,5 +187,81 @@ void main() {
       await attributionManager.clearData();
       verify(mockStorageManager.clearAll()).called(1);
     });
+
+    test(
+      'subsequent launch: returns cached data without network call',
+      () async {
+        // installId already stored → subsequent launch
+        when(mockStorageManager.getInstallId()).thenReturn('inst_cached');
+        final cachedData = DeepLinkData(shortCode: 'xyz');
+        when(mockStorageManager.getInstallData()).thenReturn(cachedData);
+
+        final result = await attributionManager.reportInstall(
+          attributionWindowHours: 168,
+        );
+
+        expect(result.installId, 'inst_cached');
+        expect(result.attributed, isTrue);
+        expect(result.deepLinkData?.shortCode, 'xyz');
+
+        // Must not make any network call
+        verifyNever(
+          mockNetworkManager.request<InstallResponse>(
+            endpoint: anyNamed('endpoint'),
+            method: anyNamed('method'),
+            body: anyNamed('body'),
+            fromJson: anyNamed('fromJson'),
+          ),
+        );
+      },
+    );
+
+    test(
+      'first launch network failure: returns organic response, does not throw',
+      () async {
+        final fingerprint = DeviceFingerprint(
+          userAgent: 'ua',
+          timezone: 'tz',
+          language: 'en',
+          screenWidth: 100,
+          screenHeight: 100,
+          platform: 'test',
+          platformVersion: '1.0',
+          appVersion: '1.0',
+          attributionWindowHours: 168,
+        );
+
+        // No stored installId → first launch
+        when(mockStorageManager.getInstallId()).thenReturn(null);
+
+        when(
+          mockFingerprintCollector.collectFingerprint(
+            attributionWindowHours: anyNamed('attributionWindowHours'),
+            deviceId: anyNamed('deviceId'),
+          ),
+        ).thenAnswer((_) async => fingerprint);
+
+        when(
+          mockNetworkManager.request<InstallResponse>(
+            endpoint: anyNamed('endpoint'),
+            method: anyNamed('method'),
+            body: anyNamed('body'),
+            fromJson: anyNamed('fromJson'),
+          ),
+        ).thenThrow(NetworkError(Exception('no network')));
+
+        // Should NOT throw
+        final result = await attributionManager.reportInstall(
+          attributionWindowHours: 168,
+        );
+
+        expect(result.attributed, isFalse);
+        expect(result.installId, '');
+
+        // installId must NOT be persisted on failure
+        verifyNever(mockStorageManager.saveInstallId(any));
+        verifyNever(mockStorageManager.setHasLaunched());
+      },
+    );
   });
 }

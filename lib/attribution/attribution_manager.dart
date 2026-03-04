@@ -1,4 +1,4 @@
-// Copyright 2026 The Forty Link Authors. All rights reserved.
+// Copyright 2026 The Link Forty Authors. All rights reserved.
 // Use of this source code is governed by a MIT-style license that can be
 // found in the LICENSE file.
 
@@ -9,8 +9,12 @@ import '../network/network_manager.dart';
 import '../network/http_method.dart';
 import '../storage/storage_manager.dart';
 import '../fingerprint/fingerprint_collector.dart';
+import '../errors/link_forty_error.dart';
 
-/// Manages install attribution and deferred deep linking
+/// Manages app install attribution and initial deferred deep link retrieval.
+///
+/// This manager is responsible for identifying how a user first found and
+/// installed the app (e.g., via a specific LinkForty short link).
 class AttributionManager {
   final NetworkManagerProtocol _networkManager;
   final StorageManagerProtocol _storageManager;
@@ -31,17 +35,39 @@ class AttributionManager {
 
   // MARK: - Install Attribution
 
-  /// Reports an install to the backend and retrieves attribution data
+  /// Reports a new app install to the LinkForty backend to retrieve attribution data.
   ///
-  /// - [attributionWindowHours]: Attribution window in hours
-  /// - [deviceId]: Optional device ID (IDFA/IDFV/GAID) if user consented
-  /// - Returns: Install response with attribution data
-  /// - Throws: [LinkFortyError] on failure
+  /// **Behavior:**
+  /// - **First Launch:** If no [installId] is stored locally, it collects a device
+  ///   fingerprint and performs a POST request to `/api/sdk/v1/install`.
+  /// - **Subsequent Launches:** If an [installId] exists, it skips the network call
+  ///   and returns the locally cached attribution data.
+  /// - **Error Handling:** If the network call fails on the first launch, it
+  ///   gracefully treats the install as "organic" (no attribution) so the SDK
+  ///   remains functional. Re-attribution may be attempted on the next launch.
+  ///
+  /// Parameters:
+  /// - [attributionWindowHours]: The lookback window in hours for matching clicks.
+  /// - [deviceId]: An optional persistent device ID (like IDFA or GAID).
   Future<InstallResponse> reportInstall({
     required int attributionWindowHours,
     String? deviceId,
   }) async {
-    // Collect device fingerprint
+    final storedInstallId = _storageManager.getInstallId();
+    if (storedInstallId != null) {
+      final cachedData = _storageManager.getInstallData();
+      LinkFortyLogger.log(
+        'Subsequent launch — loading cached attribution (installId: $storedInstallId)',
+      );
+      return InstallResponse(
+        installId: storedInstallId,
+        attributed: cachedData != null,
+        confidenceScore: cachedData != null ? 100.0 : 0.0,
+        matchedFactors: const [],
+        deepLinkData: cachedData,
+      );
+    }
+
     final fingerprint = await _fingerprintCollector.collectFingerprint(
       attributionWindowHours: attributionWindowHours,
       deviceId: deviceId,
@@ -49,20 +75,29 @@ class AttributionManager {
 
     LinkFortyLogger.log('Reporting install with fingerprint: $fingerprint');
 
-    // Send install request to backend
-    final response = await _networkManager.request<InstallResponse>(
-      endpoint: '/api/sdk/v1/install',
-      method: HttpMethod.post,
-      body: fingerprint.toJson(),
-      fromJson: (json) => InstallResponse.fromJson(json),
-    );
+    InstallResponse response;
+    try {
+      response = await _networkManager.request<InstallResponse>(
+        endpoint: '/api/sdk/v1/install',
+        method: HttpMethod.post,
+        body: fingerprint.toJson(),
+        fromJson: (json) => InstallResponse.fromJson(json),
+      );
+      LinkFortyLogger.log('Install response: $response');
+    } on LinkFortyError catch (e) {
+      LinkFortyLogger.log(
+        'Install network call failed — treating as organic. Error: $e',
+      );
+      return InstallResponse(
+        installId: '',
+        attributed: false,
+        confidenceScore: 0.0,
+        matchedFactors: const [],
+      );
+    }
 
-    LinkFortyLogger.log('Install response: $response');
-
-    // Cache install ID
     await _storageManager.saveInstallId(response.installId);
 
-    // Cache deep link data if attributed
     final deepLinkData = response.deepLinkData;
     if (deepLinkData != null) {
       await _storageManager.saveInstallData(deepLinkData);
@@ -73,7 +108,6 @@ class AttributionManager {
       LinkFortyLogger.log('Organic install (no attribution)');
     }
 
-    // Mark that app has launched
     await _storageManager.setHasLaunched();
 
     return response;

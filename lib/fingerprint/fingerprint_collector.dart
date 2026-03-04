@@ -1,4 +1,4 @@
-// Copyright 2026 The Forty Link Authors. All rights reserved.
+// Copyright 2026 The Link Forty Authors. All rights reserved.
 // Use of this source code is governed by a MIT-style license that can be
 // found in the LICENSE file.
 
@@ -10,15 +10,29 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'device_fingerprint.dart';
 
-/// Protocol for dependency injection in tests
+class _ScreenDimensions {
+  final int width;
+  final int height;
+  _ScreenDimensions(this.width, this.height);
+}
+
+class _PlatformInfo {
+  final String name;
+  final String version;
+  _PlatformInfo(this.name, this.version);
+}
+
+/// Protocol for [FingerprintCollector] to enable dependency injection in tests.
 abstract class FingerprintCollectorProtocol {
+  /// Collects a snapshot of device properties for attribution matching.
   Future<DeviceFingerprint> collectFingerprint({
     required int attributionWindowHours,
     String? deviceId,
   });
 }
 
-/// Collects device fingerprint data for attribution matching
+/// Responsible for gathering device and environment data used for
+/// probabilistic attribution matching.
 class FingerprintCollector implements FingerprintCollectorProtocol {
   final DeviceInfoPlugin _deviceInfo;
   final PackageInfo? _packageInfo;
@@ -27,26 +41,29 @@ class FingerprintCollector implements FingerprintCollectorProtocol {
   ///
   /// - [deviceInfo]: Device info plugin instance
   /// - [packageInfo]: Package info (if already loaded)
-  FingerprintCollector({
-    DeviceInfoPlugin? deviceInfo,
-    PackageInfo? packageInfo,
-  })  : _deviceInfo = deviceInfo ?? DeviceInfoPlugin(),
+  FingerprintCollector({DeviceInfoPlugin? deviceInfo, PackageInfo? packageInfo})
+      : _deviceInfo = deviceInfo ?? DeviceInfoPlugin(),
         _packageInfo = packageInfo;
 
-  /// Collects device fingerprint for attribution
+  /// Collects a [DeviceFingerprint] containing properties like screen size,
+  /// timezone, language, and platform version.
   ///
-  /// - [attributionWindowHours]: Attribution window in hours
-  /// - [deviceId]: Optional device ID (IDFA/IDFV/GAID) if user consented
-  /// - Returns: Device fingerprint
+  /// Parameters:
+  /// - [attributionWindowHours]: The duration to look back for clicks.
+  /// - [deviceId]: An optional persistent device identifier (e.g., IDFA).
   @override
   Future<DeviceFingerprint> collectFingerprint({
     required int attributionWindowHours,
     String? deviceId,
   }) async {
     final packageInfo = _packageInfo ?? await PackageInfo.fromPlatform();
-    final (screenWidth, screenHeight) = _getScreenDimensions();
+    final dims = _getScreenDimensions();
+    final screenWidth = dims.width;
+    final screenHeight = dims.height;
     final userAgent = await _generateUserAgent(packageInfo);
-    final (platform, platformVersion) = await _getPlatformInfo();
+    final info = await _getPlatformInfo();
+    final platform = info.name;
+    final platformVersion = info.version;
 
     return DeviceFingerprint(
       userAgent: userAgent,
@@ -70,30 +87,35 @@ class FingerprintCollector implements FingerprintCollectorProtocol {
   Future<String> _generateUserAgent(PackageInfo packageInfo) async {
     final appName = packageInfo.appName;
     final appVersion = packageInfo.version;
-    final (platform, platformVersion) = await _getPlatformInfo();
+    final info = await _getPlatformInfo();
+    final platform = info.name;
+    final platformVersion = info.version;
 
     return '$appName/$appVersion $platform/$platformVersion';
   }
 
-  /// Returns (width, height) in native pixels
-  (int, int) _getScreenDimensions() {
+  /// Returns screen dimensions in native pixels
+  _ScreenDimensions _getScreenDimensions() {
     try {
       // Ensure bindings are initialized
       WidgetsFlutterBinding.ensureInitialized();
-      
+
       // Get the first view from the platform dispatcher
       final views = WidgetsBinding.instance.platformDispatcher.views;
       if (views.isEmpty) {
-        return (0, 0);
+        return _ScreenDimensions(0, 0);
       }
-      
+
       final view = views.first;
       final physicalSize = view.physicalSize;
-      
-      return (physicalSize.width.toInt(), physicalSize.height.toInt());
+
+      return _ScreenDimensions(
+        physicalSize.width.toInt(),
+        physicalSize.height.toInt(),
+      );
     } catch (e) {
       // Fallback for testing or headless environments
-      return (0, 0);
+      return _ScreenDimensions(0, 0);
     }
   }
 
@@ -120,24 +142,24 @@ class FingerprintCollector implements FingerprintCollectorProtocol {
   }
 
   /// Gets platform and version information
-  Future<(String, String)> _getPlatformInfo() async {
+  Future<_PlatformInfo> _getPlatformInfo() async {
     if (Platform.isAndroid) {
       final androidInfo = await _deviceInfo.androidInfo;
-      return ('Android', androidInfo.version.release);
+      return _PlatformInfo('Android', androidInfo.version.release);
     } else if (Platform.isIOS) {
       final iosInfo = await _deviceInfo.iosInfo;
-      return ('iOS', iosInfo.systemVersion);
+      return _PlatformInfo('iOS', iosInfo.systemVersion);
     } else if (Platform.isMacOS) {
       final macosInfo = await _deviceInfo.macOsInfo;
-      return ('macOS', macosInfo.osRelease);
+      return _PlatformInfo('macOS', macosInfo.osRelease);
     } else if (Platform.isWindows) {
       final windowsInfo = await _deviceInfo.windowsInfo;
-      return ('Windows', windowsInfo.buildNumber.toString());
+      return _PlatformInfo('Windows', windowsInfo.buildNumber.toString());
     } else if (Platform.isLinux) {
       final linuxInfo = await _deviceInfo.linuxInfo;
-      return ('Linux', linuxInfo.version ?? 'Unknown');
+      return _PlatformInfo('Linux', linuxInfo.version ?? 'Unknown');
     } else {
-      return (Platform.operatingSystem, 'Unknown');
+      return _PlatformInfo(Platform.operatingSystem, 'Unknown');
     }
   }
 }

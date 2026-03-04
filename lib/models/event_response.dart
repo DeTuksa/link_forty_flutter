@@ -1,4 +1,4 @@
-// Copyright 2026 The Forty Link Authors. All rights reserved.
+// Copyright 2026 The Link Forty Authors. All rights reserved.
 // Use of this source code is governed by a MIT-style license that can be
 // found in the LICENSE file.
 
@@ -13,9 +13,7 @@ class EventResponse {
   final bool success;
 
   /// Creates an event response
-  const EventResponse({
-    required this.success,
-  });
+  const EventResponse({required this.success});
 
   /// JSON deserialization
   factory EventResponse.fromJson(Map<String, dynamic> json) =>

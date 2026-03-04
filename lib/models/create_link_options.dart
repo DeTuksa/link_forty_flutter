@@ -1,4 +1,4 @@
-// Copyright 2026 The Forty Link Authors. All rights reserved.
+// Copyright 2026 The Link Forty Authors. All rights reserved.
 // Use of this source code is governed by a MIT-style license that can be
 // found in the LICENSE file.
 
@@ -7,7 +7,7 @@ import 'utm_parameters.dart';
 
 part 'create_link_options.g.dart';
 
-/// Options for creating a short link
+/// Configuration options used when creating a new short link programmatically.
 @JsonSerializable(explicitToJson: true)
 class CreateLinkOptions {
   /// Template ID (auto-selected if omitted)

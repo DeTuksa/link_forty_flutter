@@ -1,4 +1,4 @@
-// Copyright 2026 The Forty Link Authors. All rights reserved.
+// Copyright 2026 The Link Forty Authors. All rights reserved.
 // Use of this source code is governed by a MIT-style license that can be
 // found in the LICENSE file.
 
@@ -6,7 +6,11 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'device_fingerprint.g.dart';
 
-/// Device fingerprint for attribution matching
+/// A data model representing a unique snapshot of device characteristics.
+///
+/// This data is sent to the LinkForty backend to perform "fingerprint"
+/// or probabilistic matching when a direct 1:1 match (via device ID)
+/// is not available.
 @JsonSerializable()
 class DeviceFingerprint {
   /// User-Agent string (e.g., "MyApp/1.0 iOS/15.0")

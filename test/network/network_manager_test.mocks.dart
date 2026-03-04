@@ -28,7 +28,7 @@ import 'package:mockito/mockito.dart' as _i1;
 
 class _FakeHttpResponse_0 extends _i1.SmartFake implements _i2.HttpResponse {
   _FakeHttpResponse_0(Object parent, Invocation parentInvocation)
-    : super(parent, parentInvocation);
+      : super(parent, parentInvocation);
 }
 
 /// A class which mocks [HttpClient].
@@ -47,23 +47,22 @@ class MockHttpClient extends _i1.Mock implements _i3.HttpClient {
     Map<String, String>? headers,
   }) =>
       (super.noSuchMethod(
+        Invocation.method(#execute, [], {
+          #url: url,
+          #method: method,
+          #body: body,
+          #headers: headers,
+        }),
+        returnValue: _i4.Future<_i2.HttpResponse>.value(
+          _FakeHttpResponse_0(
+            this,
             Invocation.method(#execute, [], {
               #url: url,
               #method: method,
               #body: body,
               #headers: headers,
             }),
-            returnValue: _i4.Future<_i2.HttpResponse>.value(
-              _FakeHttpResponse_0(
-                this,
-                Invocation.method(#execute, [], {
-                  #url: url,
-                  #method: method,
-                  #body: body,
-                  #headers: headers,
-                }),
-              ),
-            ),
-          )
-          as _i4.Future<_i2.HttpResponse>);
+          ),
+        ),
+      ) as _i4.Future<_i2.HttpResponse>);
 }

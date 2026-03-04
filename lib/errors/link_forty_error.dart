@@ -1,9 +1,9 @@
-// Copyright 2026 The Forty Link Authors. All rights reserved.
+// Copyright 2026 The Link Forty Authors. All rights reserved.
 // Use of this source code is governed by a MIT-style license that can be
 // found in the LICENSE file.
 
 /// Errors that can occur when using the LinkForty SDK
-sealed class LinkFortyError implements Exception {
+abstract class LinkFortyError implements Exception {
   final String message;
   final Object? cause;
 
@@ -14,7 +14,7 @@ sealed class LinkFortyError implements Exception {
 }
 
 /// The SDK has not been initialized
-/// 
+///
 /// Call `LinkForty.instance.initialize(config:)` before using other SDK methods
 class NotInitializedError extends LinkFortyError {
   const NotInitializedError()
@@ -22,7 +22,7 @@ class NotInitializedError extends LinkFortyError {
 }
 
 /// The SDK has already been initialized
-/// 
+///
 /// `initialize(config:)` can only be called once
 class AlreadyInitializedError extends LinkFortyError {
   const AlreadyInitializedError()
@@ -109,5 +109,14 @@ class InvalidDeepLinkUrlError extends LinkFortyError {
 class MissingApiKeyError extends LinkFortyError {
   const MissingApiKeyError()
       : super(
-            'API key is required for this operation. Provide an apiKey in LinkFortyConfig.');
+          'API key is required for this operation. Provide an apiKey in LinkFortyConfig.',
+        );
+}
+
+/// Template ID is required for link creation
+class MissingTemplateIdError extends LinkFortyError {
+  const MissingTemplateIdError()
+      : super(
+          'A template ID is required for link creation. Provide a templateId in CreateLinkOptions.',
+        );
 }

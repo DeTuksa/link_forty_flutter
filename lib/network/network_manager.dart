@@ -1,4 +1,4 @@
-// Copyright 2026 The Forty Link Authors. All rights reserved.
+// Copyright 2026 The Link Forty Authors. All rights reserved.
 // Use of this source code is governed by a MIT-style license that can be
 // found in the LICENSE file.
 
@@ -13,8 +13,9 @@ import 'http_client.dart';
 import 'http_method.dart';
 import 'http_response.dart';
 
-/// Protocol for dependency injection in tests
+/// Protocol for [NetworkManager] to enable dependency injection in tests.
 abstract class NetworkManagerProtocol {
+  /// Performs an asynchronous network request and decodes the JSON response.
   Future<T> request<T>({
     required String endpoint,
     required HttpMethod method,
@@ -24,7 +25,11 @@ abstract class NetworkManagerProtocol {
   });
 }
 
-/// Manages network requests for the SDK
+/// Coordinates all network communication between the SDK and the LinkForty API.
+///
+/// This manager handles URL construction, header injection (including
+/// authentication), JSON serialization, and automatic retries with
+/// exponential backoff.
 class NetworkManager implements NetworkManagerProtocol {
   final LinkFortyConfig _config;
   final HttpClient _httpClient;
@@ -33,18 +38,23 @@ class NetworkManager implements NetworkManagerProtocol {
   static const int _maxRetries = 3;
 
   NetworkManager({required LinkFortyConfig config, HttpClient? httpClient})
-    : _config = config,
-      _httpClient = httpClient ?? HttpClientImpl();
+      : _config = config,
+        _httpClient = httpClient ?? HttpClientImpl();
 
-  /// Performs a network request with automatic retry and decodes the response
+  /// Performs an asynchronous network request and decodes the JSON response.
   ///
-  /// - [endpoint]: API endpoint path (e.g., "/api/sdk/v1/install")
-  /// - [method]: HTTP method
-  /// - [body]: Optional request body (will be serialized to JSON)
-  /// - [headers]: Optional additional headers
-  /// - [fromJson]: Function to decode the response
-  /// - Returns: Decoded response of type T
-  /// - Throws: [LinkFortyError] on failure
+  /// This method automatically retries failed requests up to [_maxRetries] times
+  /// using an exponential backoff strategy.
+  ///
+  /// Parameters:
+  /// - [endpoint]: The API path (e.g., "/api/links").
+  /// - [method]: The [HttpMethod] for the request.
+  /// - [body]: Optional object to be sent as a JSON request body.
+  /// - [headers]: Optional map of additional HTTP headers.
+  /// - [fromJson]: A factory function to transform the response JSON into type [T].
+  ///
+  /// Throws a [LinkFortyError] (e.g., [NetworkError], [InvalidResponseError]) if
+  /// the request ultimately fails.
   @override
   Future<T> request<T>({
     required String endpoint,
