@@ -41,7 +41,10 @@ class SharedPreferencesWrapper implements SharedPreferencesProtocol {
   Future<bool> remove(String key) => _prefs.remove(key);
 }
 
-/// Manages persistent storage for the SDK using SharedPreferences
+/// Manages persistent data for the SDK using the platform's local storage.
+///
+/// This manager handles caching of attribution results, the install ID,
+/// and the offline event queue to ensure data survives app restarts.
 class StorageManager implements StorageManagerProtocol {
   final SharedPreferencesProtocol _prefs;
 

@@ -14,7 +14,10 @@ import '../errors/link_forty_error.dart';
 import '../link_forty_logger.dart';
 import 'event_queue.dart';
 
-/// Tracks custom events and manages event queueing
+/// Responsible for tracking custom in-app events and managing the offline queue.
+///
+/// This tracker handles immediate event submission and falls back to a
+/// persistent [EventQueue] when the network is unavailable or requests fail.
 class EventTracker implements EventTrackerProtocol {
   final NetworkManagerProtocol _networkManager;
   final StorageManagerProtocol _storageManager;
@@ -82,12 +85,15 @@ class EventTracker implements EventTrackerProtocol {
     }
   }
 
-  /// Tracks a revenue event
+  /// Tracks a revenue-generating event.
   ///
-  /// - [amount]: Revenue amount (must be non-negative)
-  /// - [currency]: Currency code (e.g., "USD")
-  /// - [properties]: Optional additional properties
-  /// - Throws: [LinkFortyError] if tracking fails
+  /// This is a convenience method that wraps [trackEvent] with specialized
+  /// revenue properties (`revenue` and `currency`).
+  ///
+  /// Parameters:
+  /// - [amount]: The decimal value of the transaction.
+  /// - [currency]: The 3-letter ISO code (e.g., "USD").
+  /// - [properties]: Optional additional context.
   @override
   Future<void> trackRevenue({
     required double amount,

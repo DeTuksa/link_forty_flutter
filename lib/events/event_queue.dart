@@ -6,7 +6,10 @@ import 'dart:collection';
 import '../link_forty_logger.dart';
 import '../models/event_request.dart';
 
-/// Queue for storing events when offline
+/// A thread-safe in-memory queue for [EventRequest] objects.
+///
+/// The queue has a maximum capacity defined by [_maxQueueSize]. When the queue
+/// is full, new events are dropped to prevent memory exhaustion.
 class EventQueue {
   /// Maximum number of events to queue
   static const int _maxQueueSize = 100;
@@ -14,10 +17,10 @@ class EventQueue {
   /// Queued events
   final Queue<EventRequest> _queue = Queue<EventRequest>();
 
-  /// Adds an event to the queue
+  /// Adds an [event] to the end of the queue.
   ///
-  /// - [event]: Event to queue
-  /// - Returns: True if added, false if queue is full
+  /// Returns `true` if the event was successfully added, or `false` if the
+  /// queue has reached its capacity and the event was dropped.
   bool enqueue(EventRequest event) {
     if (_queue.length >= _maxQueueSize) {
       LinkFortyLogger.log(
@@ -33,17 +36,15 @@ class EventQueue {
     return true;
   }
 
-  /// Dequeues the oldest event
+  /// Removes and returns the oldest [EventRequest] from the front of the queue.
   ///
-  /// - Returns: The oldest event, or null if queue is empty
+  /// Returns `null` if the queue is empty.
   EventRequest? dequeue() {
     if (_queue.isEmpty) return null;
     return _queue.removeFirst();
   }
 
-  /// Returns all queued events without removing them
-  ///
-  /// - Returns: List of queued events
+  /// Returns a snapshot of all events currently in the queue without removing them.
   List<EventRequest> peek() {
     return List<EventRequest>.from(_queue);
   }

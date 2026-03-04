@@ -5,7 +5,7 @@
 import '../models/deep_link_data.dart';
 import '../models/utm_parameters.dart';
 
-/// Utility for parsing URLs and extracting parameters
+/// A utility class for extracting information from LinkForty deep link URLs.
 class URLParser {
   // Private constructor to prevent instantiation
   const URLParser._();

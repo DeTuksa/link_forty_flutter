@@ -24,10 +24,15 @@ void main() {
     mockStorageManager = MockStorageManagerProtocol();
     mockQueue = MockEventQueue();
 
+    // Setup default storage behavior
+    when(mockStorageManager.loadEventQueue()).thenReturn([]);
+    when(mockStorageManager.saveEventQueue(any)).thenAnswer((_) async => true);
+
     // Setup default queue behavior
     when(mockQueue.count).thenReturn(0);
     when(mockQueue.isEmpty).thenReturn(true);
     when(mockQueue.enqueue(any)).thenReturn(true);
+    when(mockQueue.peek()).thenReturn([]);
 
     eventTracker = EventTracker(
       networkManager: mockNetworkManager,
@@ -254,32 +259,32 @@ void main() {
       },
     );
 
-    test(
-      'EventTracker loads persisted queue from storage on creation',
-      () async {
-        final persistedEvent = EventRequest(
-          installId: 'inst_1',
-          eventName: 'persisted',
-          eventData: {},
-        );
+    test('EventTracker loads persisted queue from storage on creation', () async {
+      final persistedEvent = EventRequest(
+        installId: 'inst_1',
+        eventName: 'persisted',
+        eventData: {},
+      );
 
-        // Return persisted events from storage
-        when(mockStorageManager.loadEventQueue()).thenReturn([persistedEvent]);
+      // Return persisted events from storage
+      when(mockStorageManager.loadEventQueue()).thenReturn([persistedEvent]);
 
-        // The real EventQueue is used here (not the mock)
-        final realQueue = EventQueue();
-        final tracker = EventTracker(
-          networkManager: mockNetworkManager,
-          storageManager: mockStorageManager,
-          eventQueue: realQueue,
-        );
+      // Clear interactions from setup so we can count calls specific to this test
+      clearInteractions(mockStorageManager);
 
-        // Wait for constructor side-effects
-        await Future.delayed(Duration.zero);
+      // The real EventQueue is used here (not the mock)
+      final realQueue = EventQueue();
+      final tracker = EventTracker(
+        networkManager: mockNetworkManager,
+        storageManager: mockStorageManager,
+        eventQueue: realQueue,
+      );
 
-        expect(tracker.queuedEventCount, 1);
-        verify(mockStorageManager.loadEventQueue()).called(1);
-      },
-    );
+      // Wait for constructor side-effects
+      await Future.delayed(Duration.zero);
+
+      expect(tracker.queuedEventCount, 1);
+      verify(mockStorageManager.loadEventQueue()).called(1);
+    });
   });
 }

@@ -36,13 +36,14 @@ void main() {
       apiKey: 'test_key',
     );
 
-    // Reset singleton if possible, or just expect separate instances if using dependency injection
-    // Since LinkForty is a singleton, we need to reset it.
-    // However, LinkForty doesn't expose a reset method for the singleton instance itself purely.
-    // But it has a `reset()` method which clears internal state but not the `_instance` reference?
-    // Let's check `reset()` implementation:
-    // `_instance = null;`
-    // Yes! `reset()` clears the singleton instance.
+    // Default storage stubs (first launch state)
+    when(mockStorageManager.getInstallId()).thenReturn(null);
+    when(mockStorageManager.getInstallData()).thenReturn(null);
+    when(mockStorageManager.loadEventQueue()).thenReturn([]);
+    when(mockStorageManager.saveInstallId(any)).thenAnswer((_) async => true);
+    when(mockStorageManager.saveInstallData(any)).thenAnswer((_) async => true);
+    when(mockStorageManager.setHasLaunched()).thenAnswer((_) async => true);
+
     LinkForty.instanceOrNull?.reset();
   });
 

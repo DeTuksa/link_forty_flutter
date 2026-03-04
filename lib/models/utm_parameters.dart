@@ -6,7 +6,7 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'utm_parameters.g.dart';
 
-/// UTM parameters for campaign tracking
+/// Standard UTM parameters used for campaign tracking and analytics.
 @JsonSerializable()
 class UTMParameters {
   /// Campaign source (e.g., "google", "facebook", "email")

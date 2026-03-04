@@ -22,7 +22,10 @@ typedef DeferredDeepLinkCallback = void Function(DeepLinkData? deepLinkData);
 /// - [deepLinkData]: Parsed deep link data, null if parsing failed
 typedef DeepLinkCallback = void Function(Uri uri, DeepLinkData? deepLinkData);
 
-/// Handles deep linking and callbacks
+/// Responsible for handling both deferred and direct deep links.
+///
+/// This class manages the registration of callbacks and performs server-side
+/// resolution of deep link URLs to extract campaign metadata.
 class DeepLinkHandler {
   final List<DeferredDeepLinkCallback> _deferredDeepLinkCallbacks = [];
   final List<DeepLinkCallback> _deepLinkCallbacks = [];
@@ -44,11 +47,13 @@ class DeepLinkHandler {
 
   // MARK: - Configuration
 
-  /// Configures the handler with network capabilities for server-side resolution
+  /// Configures the handler with the necessary components for server-side
+  /// URL resolution.
   ///
-  /// - [networkManager]: Network manager for API requests
-  /// - [fingerprintCollector]: Fingerprint collector for resolution requests
-  /// - [baseURL]: Base URL for detecting LinkForty URLs
+  /// Parameters:
+  /// - [networkManager]: The network layer for API requests.
+  /// - [fingerprintCollector]: The collector for device metadata.
+  /// - [baseURL]: The base URL used for identifying LinkForty-shortened links.
   void configure({
     required NetworkManagerProtocol networkManager,
     required FingerprintCollectorProtocol fingerprintCollector,
@@ -61,17 +66,15 @@ class DeepLinkHandler {
 
   // MARK: - Deferred Deep Link (Install Attribution)
 
-  /// Registers a callback for deferred deep links
+  /// Registers a [callback] for deferred deep links.
   ///
-  /// - [callback]: Callback to invoke when deferred deep link data is available
-  ///
-  /// Note: If data is already cached, callback is invoked immediately on the main isolate
+  /// Deferred links are those that were clicked before the app was installed.
+  /// If data is already available from a previous attribution call, the
+  /// callback is invoked immediately in a microtask.
   void onDeferredDeepLink(DeferredDeepLinkCallback callback) {
     _deferredDeepLinkCallbacks.add(callback);
 
-    // If we already have data, invoke immediately
     if (_deferredDeepLinkDelivered) {
-      // Schedule callback for next event loop to maintain async behavior
       Future.microtask(() => callback(_cachedDeferredDeepLink));
     }
   }
@@ -107,22 +110,21 @@ class DeepLinkHandler {
     _deepLinkCallbacks.add(callback);
   }
 
-  /// Handles a deep link URI with server-side resolution
+  /// Resolves the provided [uri] to extract [DeepLinkData].
   ///
-  /// - [uri]: The URI that opened the app
+  /// It first attempts to resolve the URL via the LinkForty backend to get
+  /// full campaign metadata. If the network request fails or the SDK is not
+  /// configured for server-side resolution, it falls back to parsing the URL locally.
   Future<void> handleDeepLink(Uri uri) async {
     LinkFortyLogger.log('Handling deep link: $uri');
 
-    // Parse locally first as fallback
     final localData = URLParser.parseDeepLink(uri);
 
-    // Attempt server-side resolution if configured
     final resolvedData =
         (_networkManager != null && _fingerprintCollector != null)
         ? await _resolveUrl(uri, fallback: localData)
         : localData;
 
-    // Create a snapshot of callbacks
     final callbacks = List<DeepLinkCallback>.from(_deepLinkCallbacks);
 
     if (resolvedData != null) {
@@ -131,7 +133,6 @@ class DeepLinkHandler {
       LinkFortyLogger.log('Failed to parse deep link URL');
     }
 
-    // Invoke all callbacks
     for (final callback in callbacks) {
       callback(uri, resolvedData);
     }

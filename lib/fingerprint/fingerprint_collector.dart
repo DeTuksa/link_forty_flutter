@@ -10,15 +10,17 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'device_fingerprint.dart';
 
-/// Protocol for dependency injection in tests
+/// Protocol for [FingerprintCollector] to enable dependency injection in tests.
 abstract class FingerprintCollectorProtocol {
+  /// Collects a snapshot of device properties for attribution matching.
   Future<DeviceFingerprint> collectFingerprint({
     required int attributionWindowHours,
     String? deviceId,
   });
 }
 
-/// Collects device fingerprint data for attribution matching
+/// Responsible for gathering device and environment data used for
+/// probabilistic attribution matching.
 class FingerprintCollector implements FingerprintCollectorProtocol {
   final DeviceInfoPlugin _deviceInfo;
   final PackageInfo? _packageInfo;
@@ -31,11 +33,12 @@ class FingerprintCollector implements FingerprintCollectorProtocol {
     : _deviceInfo = deviceInfo ?? DeviceInfoPlugin(),
       _packageInfo = packageInfo;
 
-  /// Collects device fingerprint for attribution
+  /// Collects a [DeviceFingerprint] containing properties like screen size,
+  /// timezone, language, and platform version.
   ///
-  /// - [attributionWindowHours]: Attribution window in hours
-  /// - [deviceId]: Optional device ID (IDFA/IDFV/GAID) if user consented
-  /// - Returns: Device fingerprint
+  /// Parameters:
+  /// - [attributionWindowHours]: The duration to look back for clicks.
+  /// - [deviceId]: An optional persistent device identifier (e.g., IDFA).
   @override
   Future<DeviceFingerprint> collectFingerprint({
     required int attributionWindowHours,

@@ -2,36 +2,36 @@
 // Use of this source code is governed by a MIT-style license that can be
 // found in the LICENSE file.
 
-/// Configuration for the LinkForty SDK
+/// Holds all configuration settings required to initialize the LinkForty SDK.
 class LinkFortyConfig {
-  /// The base URL of your LinkForty instance
+  /// The base URL of your LinkForty instance.
   ///
-  /// Must be HTTPS in production (HTTP allowed for localhost testing only)
+  /// Must be HTTPS in production (HTTP allowed for localhost testing only).
   final Uri baseURL;
 
-  /// API key for LinkForty Cloud (optional for self-hosted Core)
+  /// API key for LinkForty Cloud (optional for self-hosted Core).
   ///
-  /// Sent as Bearer token in Authorization header
+  /// Sent as Bearer token in Authorization header.
   final String? apiKey;
 
-  /// Enable debug logging
+  /// Enable debug logging.
   ///
-  /// Logs network requests, responses, and SDK operations
+  /// Logs network requests, responses, and SDK operations.
   final bool debug;
 
-  /// Attribution window in hours (1-2160, default: 168 = 7 days)
+  /// Attribution window in hours (1-2160, default: 168 = 7 days).
   ///
-  /// How long after a click an install can be attributed
+  /// How long after a click an install can be attributed.
   final int attributionWindowHours;
 
-  /// Creates a new LinkForty configuration
+  /// Creates a new LinkForty configuration.
   ///
-  /// - [baseURL]: The base URL of your LinkForty instance (e.g., https://go.yourdomain.com)
-  /// - [apiKey]: Optional API key for LinkForty Cloud authentication
-  /// - [debug]: Enable debug logging (default: false)
-  /// - [attributionWindowHours]: Attribution window in hours (default: 168 = 7 days)
+  /// - [baseURL]: The base URL of your LinkForty instance (e.g., https://go.yourdomain.com).
+  /// - [apiKey]: Optional API key for LinkForty Cloud authentication.
+  /// - [debug]: Enable debug logging (default: false).
+  /// - [attributionWindowHours]: Attribution window in hours (default: 168 = 7 days).
   ///
-  /// For self-hosted LinkForty Core, omit the apiKey parameter
+  /// For self-hosted LinkForty Core, omit the apiKey parameter.
   const LinkFortyConfig({
     required this.baseURL,
     this.apiKey,
@@ -39,9 +39,9 @@ class LinkFortyConfig {
     this.attributionWindowHours = 168,
   });
 
-  /// Validates the configuration
+  /// Validates the configuration.
   ///
-  /// Throws [LinkFortyException] if validation fails
+  /// Throws [LinkFortyException] if validation fails.
   void validate() {
     // Validate HTTPS (except localhost)
     if (baseURL.scheme != 'https' && !_isLocalhost) {
@@ -58,7 +58,7 @@ class LinkFortyConfig {
     }
   }
 
-  /// Checks if the base URL is localhost
+  /// Checks if the base URL is localhost.
   bool get _isLocalhost {
     final host = baseURL.host;
     return host == 'localhost' ||
@@ -95,14 +95,14 @@ class LinkFortyConfig {
       attributionWindowHours.hashCode;
 }
 
-/// LinkForty SDK exceptions
+/// LinkForty SDK exceptions.
 class LinkFortyException implements Exception {
   final String message;
   final String? details;
 
   const LinkFortyException(this.message, [this.details]);
 
-  /// Invalid configuration error
+  /// Invalid configuration error.
   factory LinkFortyException.invalidConfiguration(String message) {
     return LinkFortyException('Invalid configuration: $message');
   }

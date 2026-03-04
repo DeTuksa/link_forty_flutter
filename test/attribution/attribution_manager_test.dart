@@ -28,6 +28,14 @@ void main() {
     mockNetworkManager = MockNetworkManagerProtocol();
     mockStorageManager = MockStorageManagerProtocol();
     mockFingerprintCollector = MockFingerprintCollectorProtocol();
+
+    // Setup default storage behavior (first launch)
+    when(mockStorageManager.getInstallId()).thenReturn(null);
+    when(mockStorageManager.getInstallData()).thenReturn(null);
+    when(mockStorageManager.saveInstallId(any)).thenAnswer((_) async => true);
+    when(mockStorageManager.saveInstallData(any)).thenAnswer((_) async => true);
+    when(mockStorageManager.setHasLaunched()).thenAnswer((_) async => true);
+
     attributionManager = AttributionManager(
       networkManager: mockNetworkManager,
       storageManager: mockStorageManager,
