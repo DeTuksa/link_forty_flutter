@@ -29,9 +29,9 @@ class AttributionManager {
     required NetworkManagerProtocol networkManager,
     required StorageManagerProtocol storageManager,
     required FingerprintCollectorProtocol fingerprintCollector,
-  }) : _networkManager = networkManager,
-       _storageManager = storageManager,
-       _fingerprintCollector = fingerprintCollector;
+  })  : _networkManager = networkManager,
+        _storageManager = storageManager,
+        _fingerprintCollector = fingerprintCollector;
 
   // MARK: - Install Attribution
 

@@ -31,7 +31,7 @@ import 'package:mockito/src/dummies.dart' as _i5;
 
 class _FakeFuture_0<T1> extends _i1.SmartFake implements _i2.Future<T1> {
   _FakeFuture_0(Object parent, Invocation parentInvocation)
-    : super(parent, parentInvocation);
+      : super(parent, parentInvocation);
 }
 
 /// A class which mocks [NetworkManagerProtocol].
@@ -52,39 +52,37 @@ class MockNetworkManagerProtocol extends _i1.Mock
     required T Function(Map<String, dynamic>)? fromJson,
   }) =>
       (super.noSuchMethod(
-            Invocation.method(#request, [], {
-              #endpoint: endpoint,
-              #method: method,
-              #body: body,
-              #headers: headers,
-              #fromJson: fromJson,
-            }),
-            returnValue:
-                _i5.ifNotNull(
-                  _i5.dummyValueOrNull<T>(
-                    this,
-                    Invocation.method(#request, [], {
-                      #endpoint: endpoint,
-                      #method: method,
-                      #body: body,
-                      #headers: headers,
-                      #fromJson: fromJson,
-                    }),
-                  ),
-                  (T v) => _i2.Future<T>.value(v),
-                ) ??
-                _FakeFuture_0<T>(
-                  this,
-                  Invocation.method(#request, [], {
-                    #endpoint: endpoint,
-                    #method: method,
-                    #body: body,
-                    #headers: headers,
-                    #fromJson: fromJson,
-                  }),
-                ),
-          )
-          as _i2.Future<T>);
+        Invocation.method(#request, [], {
+          #endpoint: endpoint,
+          #method: method,
+          #body: body,
+          #headers: headers,
+          #fromJson: fromJson,
+        }),
+        returnValue: _i5.ifNotNull(
+              _i5.dummyValueOrNull<T>(
+                this,
+                Invocation.method(#request, [], {
+                  #endpoint: endpoint,
+                  #method: method,
+                  #body: body,
+                  #headers: headers,
+                  #fromJson: fromJson,
+                }),
+              ),
+              (T v) => _i2.Future<T>.value(v),
+            ) ??
+            _FakeFuture_0<T>(
+              this,
+              Invocation.method(#request, [], {
+                #endpoint: endpoint,
+                #method: method,
+                #body: body,
+                #headers: headers,
+                #fromJson: fromJson,
+              }),
+            ),
+      ) as _i2.Future<T>);
 }
 
 /// A class which mocks [StorageManagerProtocol].
@@ -97,60 +95,48 @@ class MockStorageManagerProtocol extends _i1.Mock
   }
 
   @override
-  _i2.Future<bool> saveInstallId(String? installId) =>
-      (super.noSuchMethod(
-            Invocation.method(#saveInstallId, [installId]),
-            returnValue: _i2.Future<bool>.value(false),
-          )
-          as _i2.Future<bool>);
+  _i2.Future<bool> saveInstallId(String? installId) => (super.noSuchMethod(
+        Invocation.method(#saveInstallId, [installId]),
+        returnValue: _i2.Future<bool>.value(false),
+      ) as _i2.Future<bool>);
 
   @override
   _i2.Future<bool> saveInstallData(_i7.DeepLinkData? data) =>
       (super.noSuchMethod(
-            Invocation.method(#saveInstallData, [data]),
-            returnValue: _i2.Future<bool>.value(false),
-          )
-          as _i2.Future<bool>);
+        Invocation.method(#saveInstallData, [data]),
+        returnValue: _i2.Future<bool>.value(false),
+      ) as _i2.Future<bool>);
 
   @override
-  bool isFirstLaunch() =>
-      (super.noSuchMethod(
-            Invocation.method(#isFirstLaunch, []),
-            returnValue: false,
-          )
-          as bool);
+  bool isFirstLaunch() => (super.noSuchMethod(
+        Invocation.method(#isFirstLaunch, []),
+        returnValue: false,
+      ) as bool);
 
   @override
-  _i2.Future<bool> setHasLaunched() =>
-      (super.noSuchMethod(
-            Invocation.method(#setHasLaunched, []),
-            returnValue: _i2.Future<bool>.value(false),
-          )
-          as _i2.Future<bool>);
+  _i2.Future<bool> setHasLaunched() => (super.noSuchMethod(
+        Invocation.method(#setHasLaunched, []),
+        returnValue: _i2.Future<bool>.value(false),
+      ) as _i2.Future<bool>);
 
   @override
   _i2.Future<bool> saveEventQueue(List<_i8.EventRequest>? events) =>
       (super.noSuchMethod(
-            Invocation.method(#saveEventQueue, [events]),
-            returnValue: _i2.Future<bool>.value(false),
-          )
-          as _i2.Future<bool>);
+        Invocation.method(#saveEventQueue, [events]),
+        returnValue: _i2.Future<bool>.value(false),
+      ) as _i2.Future<bool>);
 
   @override
-  List<_i8.EventRequest> loadEventQueue() =>
-      (super.noSuchMethod(
-            Invocation.method(#loadEventQueue, []),
-            returnValue: <_i8.EventRequest>[],
-          )
-          as List<_i8.EventRequest>);
+  List<_i8.EventRequest> loadEventQueue() => (super.noSuchMethod(
+        Invocation.method(#loadEventQueue, []),
+        returnValue: <_i8.EventRequest>[],
+      ) as List<_i8.EventRequest>);
 
   @override
-  _i2.Future<bool> clearAll() =>
-      (super.noSuchMethod(
-            Invocation.method(#clearAll, []),
-            returnValue: _i2.Future<bool>.value(false),
-          )
-          as _i2.Future<bool>);
+  _i2.Future<bool> clearAll() => (super.noSuchMethod(
+        Invocation.method(#clearAll, []),
+        returnValue: _i2.Future<bool>.value(false),
+      ) as _i2.Future<bool>);
 }
 
 /// A class which mocks [EventQueue].
@@ -176,24 +162,20 @@ class MockEventQueue extends _i1.Mock implements _i9.EventQueue {
           as bool);
 
   @override
-  bool enqueue(_i8.EventRequest? event) =>
-      (super.noSuchMethod(
-            Invocation.method(#enqueue, [event]),
-            returnValue: false,
-          )
-          as bool);
+  bool enqueue(_i8.EventRequest? event) => (super.noSuchMethod(
+        Invocation.method(#enqueue, [event]),
+        returnValue: false,
+      ) as bool);
 
   @override
-  List<_i8.EventRequest> peek() =>
-      (super.noSuchMethod(
-            Invocation.method(#peek, []),
-            returnValue: <_i8.EventRequest>[],
-          )
-          as List<_i8.EventRequest>);
+  List<_i8.EventRequest> peek() => (super.noSuchMethod(
+        Invocation.method(#peek, []),
+        returnValue: <_i8.EventRequest>[],
+      ) as List<_i8.EventRequest>);
 
   @override
   void clear() => super.noSuchMethod(
-    Invocation.method(#clear, []),
-    returnValueForMissingStub: null,
-  );
+        Invocation.method(#clear, []),
+        returnValueForMissingStub: null,
+      );
 }

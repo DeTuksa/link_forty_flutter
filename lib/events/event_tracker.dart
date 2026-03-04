@@ -32,9 +32,9 @@ class EventTracker implements EventTrackerProtocol {
     required NetworkManagerProtocol networkManager,
     required StorageManagerProtocol storageManager,
     EventQueue? eventQueue,
-  }) : _networkManager = networkManager,
-       _storageManager = storageManager,
-       _eventQueue = eventQueue ?? EventQueue() {
+  })  : _networkManager = networkManager,
+        _storageManager = storageManager,
+        _eventQueue = eventQueue ?? EventQueue() {
     // Restore any events that were persisted before the last app session
     _restorePersistedQueue();
   }

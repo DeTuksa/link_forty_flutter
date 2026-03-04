@@ -259,7 +259,8 @@ void main() {
       },
     );
 
-    test('EventTracker loads persisted queue from storage on creation', () async {
+    test('EventTracker loads persisted queue from storage on creation',
+        () async {
       final persistedEvent = EventRequest(
         installId: 'inst_1',
         eventName: 'persisted',
