@@ -18,11 +18,15 @@ class CreateLinkResult {
   /// Link UUID
   final String linkId;
 
+  /// True if an existing link was returned instead of creating a new one (per-user deduplication)
+  final bool? deduplicated;
+
   /// Creates a link creation result
   const CreateLinkResult({
     required this.url,
     required this.shortCode,
     required this.linkId,
+    this.deduplicated,
   });
 
   /// JSON deserialization

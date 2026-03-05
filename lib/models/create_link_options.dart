@@ -31,6 +31,9 @@ class CreateLinkOptions {
   /// UTM parameters for campaign tracking
   final UTMParameters? utmParameters;
 
+  /// Identifier for the app user creating the link (enables per-user deduplication and share attribution)
+  final String? externalUserId;
+
   /// Creates link creation options
   const CreateLinkOptions({
     this.templateId,
@@ -40,6 +43,7 @@ class CreateLinkOptions {
     this.description,
     this.customCode,
     this.utmParameters,
+    this.externalUserId,
   });
 
   /// JSON serialization

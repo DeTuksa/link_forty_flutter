@@ -10,8 +10,7 @@ EventRequest _$EventRequestFromJson(Map<String, dynamic> json) => EventRequest(
       installId: json['installId'] as String,
       eventName: json['eventName'] as String,
       eventData: EventRequest._eventDataFromJson(
-        json['eventData'] as Map<String, dynamic>,
-      ),
+          json['eventData'] as Map<String, dynamic>),
       timestamp: json['timestamp'] == null
           ? null
           : DateTime.parse(json['timestamp'] as String),
