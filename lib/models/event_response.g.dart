@@ -7,7 +7,11 @@ part of 'event_response.dart';
 // **************************************************************************
 
 EventResponse _$EventResponseFromJson(Map<String, dynamic> json) =>
-    EventResponse(success: json['success'] as bool);
+    EventResponse(
+      success: json['success'] as bool,
+    );
 
 Map<String, dynamic> _$EventResponseToJson(EventResponse instance) =>
-    <String, dynamic>{'success': instance.success};
+    <String, dynamic>{
+      'success': instance.success,
+    };

@@ -11,6 +11,7 @@ CreateLinkResult _$CreateLinkResultFromJson(Map<String, dynamic> json) =>
       url: json['url'] as String,
       shortCode: json['shortCode'] as String,
       linkId: json['linkId'] as String,
+      deduplicated: json['deduplicated'] as bool?,
     );
 
 Map<String, dynamic> _$CreateLinkResultToJson(CreateLinkResult instance) =>
@@ -18,4 +19,5 @@ Map<String, dynamic> _$CreateLinkResultToJson(CreateLinkResult instance) =>
       'url': instance.url,
       'shortCode': instance.shortCode,
       'linkId': instance.linkId,
+      'deduplicated': instance.deduplicated,
     };
